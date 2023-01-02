@@ -1,48 +1,123 @@
 <?php
- 
-$host='localhost';
-$db = 'database_postgres';
-$username = 'postgres';
-$password = '456ALVES';
- 
-$dsn = "pgsql:host=$host;port=5432;dbname=$db;user=$username;password=$password";
- 
-try{
-   $firstname = 'RENATO ALVES';
-   $lastname = 'RENATO ALVES';
-   $email = 'RENATO ALVES';
- // create a PostgreSQL database connection
- $conn = new PDO($dsn);
- 
- // display a message if connected to the PostgreSQL successfully
- if($conn){
-    
-    $sql = ("INSERT INTO testes (firstname, lastname, email) VALUES (:firstname, :lastname, :email)");
 
-$stmt = $conn->prepare($sql);
-$stmt->bindValue(':firstname', $firstname, PDO::PARAM_STR);
-$stmt->bindValue(':lastname', $lastname, PDO::PARAM_STR);
-$stmt->bindValue(':email', $email, PDO::PARAM_STR);
 
-$stmt->execute();
+class DB {
 
-echo "Connected to the <strong>$db</strong> database Successfully!";
- }
-} catch (PDOException $e){
- // report error message
- echo $e->getMessage();
+    private $pdo;
+
+    function __construct() {
+        require_once 'config.php';
+        try {
+            $connData = "pgsql:host=$host;port=5432;dbname=$dbName;";
+        
+            $this->pdo = new PDO($connData, $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);     
+        }
+        catch(PDOException $e) {
+            die($e->getMessage());
+        }
+    }
+
+    function begin() {
+        try {
+            $this->pdo->beginTransaction();
+        }
+        catch(PDOException $e) {
+            die($e->getMessage());
+        }
+    }
+
+    function commit() {
+        try {
+            $this->pdo->commit();
+        }
+        catch(PDOException $e) {
+            die($e->getMessage());
+        }
+    }
+
+    function rollback() {
+        try {
+            $this->pdo->rollBack();
+        }
+        catch(PDOException $e) {
+            die($e->getMessage());
+        }
+    }
+
+    // query method
+    // returns pdo statement object
+    function query(string $queryString, Array $substitutionArray) {
+        try {
+            $sql = $this->pdo->prepare($queryString);
+            $sql->execute($substitutionArray);
+            
+        }
+        catch(PDOException $e) {
+            die($e->getMessage());
+        }
+        return $sql;
+    }
+
+    // Returns a single row from the query parameter as an array
+    function fetchSingleRow(PDOStatement $sql) {
+        try {
+            $result = $sql->fetch(PDO::FETCH_ASSOC);
+            return $result;
+        }
+        catch(PDOException $e) {
+            die($e->getMessage());
+        }
+    }
+
+    // Returns all rows from the query parameter as an array of arrays
+    function fetchAll(PDOStatement $sql) {
+        try {
+            $result = $sql->fetchAll(PDO::FETCH_ASSOC);
+            return $result;
+        }
+        catch(PDOException $e) {
+            die($e->getMessage());
+        }
+    }
+
+    // Returns a specific number of rows specified in the parameters
+    function fetchRowNumber(PDOStatement $sql,integer $rowNumber) {
+        try {
+            $result = array();
+            for($i = 0; $i < $rowNumber; $i++) {
+                $tmp = $sql->fetch(PDO::FETCH_ASSOC);
+                array_push($result, $tmp);
+            }
+        }
+        catch(PDOException $e) {
+            die($e->getMessage());
+        }
+    }
+
+    // returns the number of rows resulting from the input query
+    function numRows(PDOStatement $sql) {
+        try {
+            return $sql->rowCount();
+        }
+        catch(PDOException $e) {
+            die($e->getMessage());
+        }
+    }
+
+    function insertRow($queryString, $substitutionArray) {
+        try {
+            $sql = $this->query($queryString, $substitutionArray);
+            if($sql && $this->numRows($sql) == 1) {
+                return 1;
+            }
+            else 
+                return -1;
+        }
+        catch(PDOException $e) {
+            die($e->getMessage());
+        }
+    }
 }
- 
 
-/ prepare statement for insert
-$sql = 'INSERT INTO tblemployee (employeenumber,firstname,lastname,email) VALUES (:employeenumber,:firstname,:lastname,:email)';
-$stmt = $pdo->prepare($sql);
 
-// pass values to the statement
-$stmt->bindValue(':employeenumber', $employeenumber);
-$stmt->bindValue(':firstname', $firstname);
-$stmt->bindValue(':lastname', $lastname);
-$stmt->bindValue(':email', $email);
-
-// execute the insert statement
-$stmt->execute();
+?>
