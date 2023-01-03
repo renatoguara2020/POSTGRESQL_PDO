@@ -10,7 +10,7 @@ try {
   $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
   // prepare sql and bind parameters
-  $stmt = $conn->prepare("INSERT INTO testes (firstname, lastname, email)
+  $sql = ("INSERT INTO testes (firstname, lastname, email)
   VALUES (:firstname, :lastname, :email)");
   $stmt->bindParam(':firstname', $firstname);
   $stmt->bindParam(':lastname', $lastname);
@@ -20,7 +20,7 @@ try {
   $firstname = "John";
   $lastname = "Doe";
   $email = "john@example.com";
-  $stmt->execute();
+  $conn->query($sql);
 
   // insert another row
   $firstname = "Mary";
